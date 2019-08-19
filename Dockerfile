@@ -1,37 +1,26 @@
-FROM php:7.2-fpm
+FROM php:7.2-fpm-alpine
 
 # Install dependencies
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    libpng-dev \
-    libjpeg62-turbo-dev \
-    libfreetype6-dev \
-    locales \
+RUN apk update && apk upgrade && apk add --update \
     zip \
-    jpegoptim optipng pngquant gifsicle \
-    vim \
     unzip \
+    bash \
+    curl \
+    procps \
     git \
-    curl
+    vim \
+    zlib-dev \
+    jpeg-dev \
+    libpng-dev \
+    nginx \
+    nodejs \
+    npm
 
-# Set the console output
-ENV LOG_STREAM /tmp/stdout
-RUN mkfifo ${LOG_STREAM} && chmod a+rwx ${LOG_STREAM}
-
-# Install nodejs
-RUN curl -sL https://deb.nodesource.com/setup_11.x | bash \
-      && apt-get update \
-      && apt-get install -y nodejs
+# Install composer
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
 # Install yarn
-RUN curl -sL https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - \
-      && echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list \
-      && apt-get update && apt-get install yarn
-
-# Clear cache
-RUN apt-get -y autoremove \
-        && apt-get clean \
-        && rm -rf /var/lib/apt/lists/*
+RUN npm install -g yarn
 
 # Install extensions
 RUN docker-php-ext-install pdo_mysql mbstring zip exif pcntl gd
@@ -44,15 +33,24 @@ RUN npm install -g yarn
 
 # Set the working directory to /var/www
 RUN mkdir -p /var/www
+RUN mkdir -p /run/nginx
 WORKDIR /var/www
 
-# Copy over the binary to run PHP
-COPY bin/docker-php.sh /usr/bin/docker-php
+# Clear any existing config
+RUN rm /etc/nginx/conf.d/*
+RUN rm /usr/local/etc/php-fpm.d/*.conf
 
 # Copy over the config
-COPY conf/php.ini /usr/local/etc/php/conf.d/zz-php.ini
-COPY conf/php-fpm.conf /usr/local/etc/php-fpm.conf
-COPY conf/php-fpm-pool.conf /usr/local/etc/php-fpm.d/zz-pool.conf
+COPY php/php.ini /usr/local/etc/php/php.ini
+COPY php/php-fpm.conf /usr/local/etc/php-fpm.conf
+COPY php/php-fpm-www.conf /usr/local/etc/php-fpm.d/www.conf
+COPY nginx/nginx.conf /etc/nginx/nginx.conf
+COPY nginx/server.conf /etc/nginx/conf.d/server.conf
 
-EXPOSE 9000
-CMD ["docker-php"]
+# Copy over the entrypoint
+COPY bin/start.sh /usr/bin/start
+RUN chmod +x /usr/bin/start
+
+STOPSIGNAL SIGTERM
+EXPOSE 80
+CMD ["start"]
