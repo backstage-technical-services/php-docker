@@ -14,7 +14,8 @@ RUN apk update && apk upgrade && apk add --update \
     libpng-dev \
     nginx \
     nodejs \
-    npm
+    npm \
+    mysql-client
 
 # Install composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
