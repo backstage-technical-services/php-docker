@@ -53,5 +53,5 @@ COPY bin/start.sh /usr/bin/start
 RUN chmod +x /usr/bin/start
 
 STOPSIGNAL SIGTERM
-EXPOSE 80
+EXPOSE 8080
 CMD ["start"]
