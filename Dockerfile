@@ -1,4 +1,4 @@
-FROM php:7.2-fpm-alpine
+FROM php:7.4-fpm-alpine
 
 # Install dependencies
 RUN apk update && apk upgrade && apk add --update \
@@ -12,6 +12,8 @@ RUN apk update && apk upgrade && apk add --update \
     zlib-dev \
     jpeg-dev \
     libpng-dev \
+    libzip-dev \
+    oniguruma-dev \
     nginx \
     nodejs \
     npm \
