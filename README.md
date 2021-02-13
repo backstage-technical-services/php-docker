@@ -1,3 +1,3 @@
-Dockerfile config for PHP-FPM 7.4
+Dockerfile config for PHP-FPM 8.0
 
 Build by running `bin/build-image.sh`.
