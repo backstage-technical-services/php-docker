@@ -1,4 +1,4 @@
-name: Build and push
+name: Master
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - '[0-9]+.[0-9]+'
 
 jobs:
-  push:
+  build-and-push:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
