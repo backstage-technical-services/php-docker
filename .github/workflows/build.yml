@@ -1,0 +1,15 @@
+name: Build
+
+on:
+  pull_request:
+    branches:
+      - '[0-9]+.[0-9]+'
+
+jobs:
+  push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build image
+        run: |
+          docker build -t bts/php:${PHP_VERSION} .
