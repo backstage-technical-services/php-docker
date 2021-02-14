@@ -1,0 +1,27 @@
+name: Build and push
+
+on:
+  push:
+    branches:
+      - '[0-9]+.[0-9]+'
+
+jobs:
+  push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Store token
+        run: echo ${{ secrets.GITHUB_TOKEN }} > .github_token
+      - name: Configure PHP version
+        run: |
+          echo "PHP_VERSION=$(echo ${GITHUB_REF#refs/heads/})" >> $GITHUB_ENV
+      - name: Build image
+        run: |
+          docker build -t bts/php:${PHP_VERSION} .
+      - name: Push image
+        run: |
+          cat .github_token | docker login docker.pkg.github.com -u $GITHUB_ACTOR --password-stdin
+          docker tag \
+            bts/php:${PHP_VERSION} \
+            docker.pkg.github.com/${GITHUB_REPOSITORY}/php:${PHP_VERSION}
+          docker push docker.pkg.github.com/${GITHUB_REPOSITORY}/php:${PHP_VERSION}
