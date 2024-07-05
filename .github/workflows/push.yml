@@ -1,0 +1,43 @@
+name: Push
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  version-matrix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - id: set-matrix
+        name: Determine version matrix
+        run: |
+          versions=($(find . -name "Dockerfile.*" | cut -d '.' -f3-))
+          echo "matrix=$(jq --compact-output --null-input '$ARGS.positional' --args -- "${versions[@]}")" | tee -a $GITHUB_OUTPUT
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+
+  push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    needs:
+      - version-matrix
+    strategy:
+      matrix:
+        version: ${{ fromJson(needs.version-matrix.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        run: |
+          docker build \
+            -f Dockerfile.${{ matrix.version }} \
+            -t ghcr.io/backstage-technical-services/php-docker:${{ matrix.version }} \
+            .
+      - name: Log into the registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u $ --password-stdin
+      - name: Push the image
+        run: |
+          docker push ghcr.io/backstage-technical-services/php-docker:${{ matrix.version }}
