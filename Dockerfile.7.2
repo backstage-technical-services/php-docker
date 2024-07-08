@@ -7,28 +7,17 @@ RUN apk update && apk upgrade && apk add --update \
     bash \
     curl \
     procps \
-    git \
     vim \
     zlib-dev \
     jpeg-dev \
     libpng-dev \
     nginx \
-    nodejs \
-    npm \
-    mysql-client \
-    httpie \
     python3 \
     py3-pip
 
 # Install supervisord
 RUN apk add --update supervisor
 COPY supervisord/supervisord.conf /etc/supervisord.conf
-
-# Install composer
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer --1
-
-# Install yarn
-RUN npm install -g yarn
 
 # Install extensions
 RUN docker-php-ext-install \
@@ -46,7 +35,9 @@ RUN rm -rf /var/www \
 WORKDIR /var/www
 
 # Configure PHP
-RUN rm -rf /usr/local/etc/php-fpm.d/*.conf
+RUN rm -rf /usr/local/etc/php-fpm.d/*.conf \
+    && mkdir -p /var/lib/php/sessions \
+    && chown -R www-data:www-data /var/lib/php/sessions
 COPY php/php.ini /usr/local/etc/php/php.ini
 COPY php/php-fpm.conf /usr/local/etc/php-fpm.conf
 COPY php/php-fpm.d /usr/local/etc/php-fpm.d
