@@ -27,9 +27,16 @@ jobs:
         version: ${{ fromJson(needs.version-matrix.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v4
+      - name: Set up builder
+        run: |
+          docker buildx create \
+            --name container \
+            --driver docker-container
       - name: Build image
         run: |
-          docker build \
+          docker buildx build \
+            --builder container \
+            --platform linux/amd64,linux/arm64 \
             -f Dockerfile.${{ matrix.version }} \
             -t ghcr.io/backstage-technical-services/php-docker:${{ matrix.version }} \
             .

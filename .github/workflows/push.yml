@@ -30,14 +30,19 @@ jobs:
         version: ${{ fromJson(needs.version-matrix.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v4
-      - name: Build image
+      - name: Set up builder
         run: |
-          docker build \
-            -f Dockerfile.${{ matrix.version }} \
-            -t ghcr.io/backstage-technical-services/php-docker:${{ matrix.version }} \
-            .
+          docker buildx create \
+            --name container \
+            --driver docker-container
       - name: Log into the registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u $ --password-stdin
-      - name: Push the image
+      - name: Build and push image
         run: |
-          docker push ghcr.io/backstage-technical-services/php-docker:${{ matrix.version }}
+          docker buildx build \
+            --builder container \
+            --platform linux/amd64,linux/arm64 \
+            -f Dockerfile.${{ matrix.version }} \ 
+            -t ghcr.io/backstage-technical-services/php-docker:${{ matrix.version }} \
+            --push \
+            .
