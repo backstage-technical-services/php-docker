@@ -42,7 +42,7 @@ jobs:
           docker buildx build \
             --builder container \
             --platform linux/amd64,linux/arm64 \
-            -f Dockerfile.${{ matrix.version }} \ 
+            -f Dockerfile.${{ matrix.version }} \
             -t ghcr.io/backstage-technical-services/php-docker:${{ matrix.version }} \
             --push \
             .
