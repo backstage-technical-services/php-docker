@@ -6,6 +6,7 @@ RUN apk update && apk upgrade && apk add --update \
     unzip \
     bash \
     curl \
+    perl \
     procps \
     vim \
     nginx \
