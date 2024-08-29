@@ -45,10 +45,6 @@ RUN rm -rf /etc/nginx/conf.d/* \
     && mkdir -p /run/nginx
 COPY nginx  /etc/nginx
 
-# Create the empty app log
-RUN touch /var/log/app.log && \
-    chown www-data:www-data /var/log/app.log
-
 STOPSIGNAL SIGTERM
 EXPOSE 8080
 CMD ["supervisord", "-n", "-c", "/etc/supervisord.conf"]
