@@ -12,11 +12,6 @@ RUN apk update && apk upgrade && apk add --update \
     python3 \
     py3-pip
 
-
-# Install supervisord
-RUN apk add --update supervisor
-COPY supervisord/supervisord.conf /etc/supervisord.conf
-
 # Install extensions
 RUN ( curl -sSLf https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions -o - || echo 'return 1' ) | sh -s \
     pdo_mysql \
@@ -32,6 +27,12 @@ RUN rm -rf /var/www \
     && mkdir -p /var/www \
     && chown -R www-data:www-data /var/www
 WORKDIR /var/www
+
+# Install supervisord
+RUN apk add --update supervisor
+COPY supervisord/supervisord.conf /etc/supervisord.conf
+COPY supervisord/prefix-logs.sh /bin/supervisor-prefix-logs
+RUN chmod +x /bin/supervisor-prefix-logs
 
 # Configure PHP
 RUN rm -rf /usr/local/etc/php-fpm.d/*.conf \
