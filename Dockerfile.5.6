@@ -41,6 +41,9 @@ RUN rm -rf /usr/local/etc/php-fpm.d/*.conf \
 COPY php/php.ini /usr/local/etc/php/php.ini
 COPY php/php-fpm.conf /usr/local/etc/php-fpm.conf
 COPY php/php-fpm.d /usr/local/etc/php-fpm.d
+RUN sed -i -E 's#^log_limit#;log_limit#' /usr/local/etc/php-fpm.conf && \
+    sed -i -E 's#^decorate_workers_output#;decorate_workers_output#g' /usr/local/etc/php-fpm.d/www.conf
+
 
 # Configure nginx
 RUN rm -rf /etc/nginx/conf.d/* \
