@@ -1,0 +1,12 @@
+map $http_user_agent $isbot {
+  default               0;
+  ~*bot                 1;
+  ~*spider              1;
+  ~*gptbot              1;
+  ~*amazonbot           1;
+  ~*bingbot             1;
+  ~*facebookexternalhit 1;
+  ~*googlebot           1;
+  ~*bytespider          1;
+  ~*seznambot           1;
+}
