@@ -32,7 +32,8 @@ WORKDIR /var/www
 RUN apk add --update supervisor
 COPY supervisord/supervisord.conf /etc/supervisord.conf
 COPY supervisord/prefix-logs.sh /bin/supervisor-prefix-logs
-RUN chmod +x /bin/supervisor-prefix-logs
+RUN mkdir -p /etc/supervisor.d/ \
+    && chmod +x /bin/supervisor-prefix-logs
 
 # Configure PHP
 RUN rm -rf /usr/local/etc/php-fpm.d/*.conf \
