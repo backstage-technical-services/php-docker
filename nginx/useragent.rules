@@ -9,4 +9,5 @@ map $http_user_agent $isbot {
   ~*googlebot           1;
   ~*bytespider          1;
   ~*seznambot           1;
+  ~*Go-http-client      1;
 }
