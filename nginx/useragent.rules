@@ -10,4 +10,5 @@ map $http_user_agent $isbot {
   ~*bytespider          1;
   ~*seznambot           1;
   ~*Go-http-client      1;
+  ~*meta-externalagent  1;
 }
