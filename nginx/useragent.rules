@@ -4,9 +4,9 @@ map $http_user_agent $isbot {
   ~*spider              1;
   ~*gptbot              1;
   ~*amazonbot           1;
-  ~*bingbot             1;
+  ~*bingbot             0;
   ~*facebookexternalhit 1;
-  ~*googlebot           1;
+  ~*googlebot           0;
   ~*bytespider          1;
   ~*seznambot           1;
   ~*Go-http-client      1;
