@@ -1,5 +1,6 @@
 map $http_user_agent $isbot {
   default               0;
+  ~*uptime-kuma         1;
   ~*gptbot              1;
   ~*amazonbot           1;
   ~*bingbot             0;
