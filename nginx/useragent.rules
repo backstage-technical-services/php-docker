@@ -1,7 +1,5 @@
 map $http_user_agent $isbot {
   default               0;
-  ~*bot                 1;
-  ~*spider              1;
   ~*gptbot              1;
   ~*amazonbot           1;
   ~*bingbot             0;
@@ -11,4 +9,6 @@ map $http_user_agent $isbot {
   ~*seznambot           1;
   ~*Go-http-client      1;
   ~*meta-externalagent  1;
+  ~*bot                 1;
+  ~*spider              1;
 }
