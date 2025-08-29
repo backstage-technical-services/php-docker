@@ -1,0 +1,53 @@
+FROM php:8.4-fpm-alpine
+
+# Install dependencies
+RUN apk update && apk upgrade && apk add --update \
+    zip \
+    unzip \
+    bash \
+    curl \
+    perl \
+    procps \
+    vim \
+    nginx \
+    python3 \
+    py3-pip
+
+# Install extensions
+RUN ( curl -sSLf https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions -o - || echo 'return 1' ) | sh -s \
+    pdo_mysql \
+    mbstring \
+    zip \
+    exif \
+    pcntl \
+    gd
+
+# Set the working directory to /var/www
+RUN rm -rf /var/www \
+    && mkdir -p /var/www \
+    && chown -R www-data:www-data /var/www
+WORKDIR /var/www
+
+# Install supervisord
+RUN apk add --update supervisor
+COPY supervisord/supervisord.conf /etc/supervisord.conf
+COPY supervisord/prefix-logs.sh /bin/supervisor-prefix-logs
+RUN mkdir -p /etc/supervisor.d/ \
+    && chmod +x /bin/supervisor-prefix-logs
+
+# Configure PHP
+RUN rm -rf /usr/local/etc/php-fpm.d/*.conf \
+    && mkdir -p /var/lib/php/sessions \
+    && chown -R www-data:www-data /var/lib/php/sessions
+COPY php/php.ini /usr/local/etc/php/php.ini
+COPY php/php-fpm.conf /usr/local/etc/php-fpm.conf
+COPY php/php-fpm.d /usr/local/etc/php-fpm.d
+
+# Configure nginx
+RUN rm -rf /etc/nginx/conf.d/* \
+    && mkdir -p /run/nginx
+COPY nginx  /etc/nginx
+
+STOPSIGNAL SIGTERM
+EXPOSE 8080
+CMD ["supervisord", "-n", "-c", "/etc/supervisord.conf"]
