@@ -57,6 +57,7 @@ jobs:
           cache-to: type=gha,mode=max,scope=${{ matrix.version }}-${{ matrix.platform.arch }}
 
   pr-check:
+    name: PR check
     runs-on: ubuntu-24.04
     needs: [build]
     steps:
