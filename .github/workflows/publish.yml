@@ -1,0 +1,112 @@
+name: Publish
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - Dockerfile.*
+      - nginx/**
+      - php/**
+      - supervisord/**
+      - .github/workflows/publish.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  IMAGE_NAME: ghcr.io/backstage-technical-services/php-docker
+
+jobs:
+  version-matrix:
+    name: Determine version matrix
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+      - id: set-matrix
+        name: Determine version matrix
+        run: |
+          versions=($(find . -name "Dockerfile.*" | cut -d '.' -f3-))
+          echo "matrix=$(jq --compact-output --null-input '$ARGS.positional' --args -- "${versions[@]}")" | tee -a $GITHUB_OUTPUT
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+
+  build:
+    name: Build and push image (${{ matrix.version }}, ${{ matrix.platform.platform }})
+    needs: [version-matrix]
+    strategy:
+      fail-fast: false
+      matrix:
+        version: ${{ fromJson(needs.version-matrix.outputs.matrix) }}
+        platform:
+          - runner: ubuntu-24.04
+            platform: linux/amd64
+            arch: amd64
+          - runner: ubuntu-24.04-arm
+            platform: linux/arm64
+            arch: aarch64
+    runs-on: ${{ matrix.platform.runner }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v4
+      - name: Log in to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ${{ env.IMAGE_NAME }}
+          tags: type=raw,value=${{ matrix.version }}-${{ matrix.platform.arch }}
+      - name: Build and push image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: Dockerfile.${{ matrix.version }}
+          platforms: ${{ matrix.platform.platform }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          provenance: false
+          sbom: false
+          cache-from: type=gha,scope=${{ matrix.version }}-${{ matrix.platform.arch }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.version }}-${{ matrix.platform.arch }}
+
+  create-manifest:
+    name: Create manifest list (${{ matrix.version }})
+    needs: [version-matrix, build]
+    strategy:
+      fail-fast: false
+      matrix:
+        version: ${{ fromJson(needs.version-matrix.outputs.matrix) }}
+    runs-on: ubuntu-24.04
+    env:
+      VERSION: ${{ matrix.version }}
+    steps:
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v4
+      - name: Log in to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create manifest list and push
+        run: |
+          docker buildx imagetools create \
+            -t "${IMAGE_NAME}:${VERSION}" \
+            "${IMAGE_NAME}:${VERSION}-amd64" \
+            "${IMAGE_NAME}:${VERSION}-aarch64"
+      - name: Inspect manifest list
+        run: docker buildx imagetools inspect "${IMAGE_NAME}:${VERSION}"
