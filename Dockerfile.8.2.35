@@ -1,4 +1,4 @@
-FROM php:8.4-fpm-alpine
+FROM php:8.2.35-fpm-alpine
 
 # Install dependencies
 RUN apk update && apk upgrade && apk add --update \
@@ -20,9 +20,7 @@ RUN ( curl -sSLf https://github.com/mlocati/docker-php-extension-installer/relea
     zip \
     exif \
     pcntl \
-    gd \
-    imagick \
-    intl
+    gd
 
 # Set the working directory to /var/www
 RUN rm -rf /var/www \
